@@ -34,6 +34,7 @@ import org.apache.commons.logging.Log;
 
 
 import java.security.cert.CertStore;
+import java.security.KeyFactory;
 import java.security.KeyStore;
 import org.globus.common.CoGProperties;
 import java.io.FileNotFoundException;
@@ -41,6 +42,7 @@ import java.io.FileInputStream;
 import java.security.cert.CertificateException;
 import org.globus.gsi.bc.BouncyCastleUtil;
 import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
@@ -583,6 +585,11 @@ public class X509Credential implements Serializable {
                 } else if (line.indexOf("BEGIN RSA PRIVATE KEY") != -1) {
                     byte[] data = getDecodedPEMObject(reader);
                     this.opensslKey = new BouncyCastleOpenSSLKey("RSA", data);
+                } else if (line.indexOf("BEGIN PRIVATE KEY") != -1) {
+                    byte[] data = getDecodedPEMObject(reader);
+                    PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(data);
+                    KeyFactory kfac = KeyFactory.getInstance("RSA");
+                    this.opensslKey = new BouncyCastleOpenSSLKey(kfac.generatePrivate(spec));
                 }
             }
         } catch (Exception e) {
